@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = "majithabhanus/banking-app"
-        DOCKER_TAG = "${BUILD_NUMBER}"
+        DOCKER_TAG   = "${BUILD_NUMBER}"
     }
 
     stages {
@@ -16,33 +16,39 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh '''
-                    python3 -m venv venv
-                    . venv/bin/activate
+                dir('APP') {
+                    sh '''
+                        python3 -m venv venv
+                        . venv/bin/activate
 
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                '''
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
+                }
             }
         }
 
         stage('Unit Tests') {
             steps {
-                sh '''
-                    . venv/bin/activate
-                    pytest -v
-                '''
+                dir('APP') {
+                    sh '''
+                        . venv/bin/activate
+                        pytest -v
+                    '''
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    docker build \
-                        -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
-                        -t ${DOCKER_IMAGE}:latest \
-                        .
-                '''
+                dir('APP') {
+                    sh '''
+                        docker build \
+                            -t ${DOCKER_IMAGE}:${DOCKER_TAG} \
+                            -t ${DOCKER_IMAGE}:latest \
+                            .
+                    '''
+                }
             }
         }
 
@@ -96,14 +102,14 @@ pipeline {
     post {
         success {
             echo "======================================"
-            echo "Pipeline completed successfully!"
+            echo "PIPELINE COMPLETED SUCCESSFULLY"
             echo "Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
             echo "======================================"
         }
 
         failure {
             echo "======================================"
-            echo "Pipeline FAILED!"
+            echo "PIPELINE FAILED"
             echo "Check the failed stage above."
             echo "======================================"
         }
