@@ -19,30 +19,50 @@ pipeline {
                 dir('APP') {
                     sh '''
                         python3 -m venv venv
-                        . venv/bin/activate
-
-                        pip install --upgrade pip
-                        pip install -r requirements.txt
+                        venv/bin/pip install --upgrade pip
+                        venv/bin/pip install -r requirements.txt
                     '''
                 }
             }
         }
 
         stage('Unit Test') {
-    steps {
-        sh '''
-            cd APP
+            steps {
+                dir('APP') {
+                    sh '''
+                        venv/bin/pip install pytest==7.4.2
+                        venv/bin/pytest -v
+                    '''
+                }
+            }
+        }
 
-            python3 -m venv venv
+        stage('SonarQube Analysis') {
+            steps {
+                dir('APP') {
+                    script {
+                        def scannerHome = tool 'SonarScanner'
 
-            venv/bin/pip install --upgrade pip
-            venv/bin/pip install -r requirements.txt
-            venv/bin/pip install pytest==7.4.2
+                        withSonarQubeEnv('SonarQube') {
+                            sh """
+                                ${scannerHome}/bin/sonar-scanner \
+                                  -Dsonar.projectKey=banking-app \
+                                  -Dsonar.projectName=banking-app \
+                                  -Dsonar.sources=.
+                            """
+                        }
+                    }
+                }
+            }
+        }
 
-            venv/bin/pytest -v
-        '''
-    }
-}
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
         stage('Build Docker Image') {
             steps {
@@ -61,10 +81,10 @@ pipeline {
             steps {
                 sh '''
                     trivy image \
-              --severity CRITICAL \
-              --exit-code 1 \
-              --ignore-unfixed \
-              majithabhanus/banking-app:${BUILD_NUMBER}
+                        --severity CRITICAL \
+                        --exit-code 1 \
+                        --ignore-unfixed \
+                        ${DOCKER_IMAGE}:${DOCKER_TAG}
                 '''
             }
         }
@@ -80,7 +100,7 @@ pipeline {
                 ]) {
                     sh '''
                         echo "$DOCKER_PASSWORD" | docker login \
-                            -u "$DOCKER_USERNAME" \
+                            --username "$DOCKER_USERNAME" \
                             --password-stdin
                     '''
                 }
@@ -98,9 +118,7 @@ pipeline {
 
         stage('Logout Docker Hub') {
             steps {
-                sh '''
-                    docker logout
-                '''
+                sh 'docker logout'
             }
         }
     }
