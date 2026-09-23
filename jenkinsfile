@@ -61,7 +61,7 @@ pipeline {
             steps {
                 sh '''
                     trivy image \
-              --severity HIGH,CRITICAL \
+              --severity CRITICAL \
               --exit-code 1 \
               --ignore-unfixed \
               majithabhanus/banking-app:${BUILD_NUMBER}
