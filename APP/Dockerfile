@@ -2,18 +2,18 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-# Update OS packages with available security fixes
+# Update available OS security fixes
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python dependencies
+# Copy dependencies
 COPY requirements.txt .
 
-# Upgrade Python packaging tools and install dependencies
-RUN python -m pip install --no-cache-dir --upgrade pip setuptools \
-    && python -m pip install --no-cache-dir -r requirements.txt
+# Install only application dependencies
+RUN python -m pip install --no-cache-dir -r requirements.txt \
+    && python -m pip uninstall -y setuptools wheel || true
 
 # Copy application
 COPY app.py .
