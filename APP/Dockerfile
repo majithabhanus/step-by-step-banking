@@ -1,17 +1,10 @@
-FROM python:3.13-slim AS builder
+FROM python:3.13-alpine
 
 WORKDIR /app
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir --target=/install Flask==3.1.2 msgpack==1.2.1
-
-
-FROM python:3.13-slim
-
-WORKDIR /app
-
-COPY --from=builder /install /usr/local/lib/python3.13/site-packages
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app.py .
 
