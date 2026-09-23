@@ -28,16 +28,21 @@ pipeline {
             }
         }
 
-        stage('Unit Tests') {
-            steps {
-                dir('APP') {
-                    sh '''
-                        . venv/bin/activate
-                        pytest -v
-                    '''
-                }
-            }
-        }
+        stage('Unit Test') {
+    steps {
+        sh '''
+            cd APP
+
+            python3 -m venv venv
+
+            venv/bin/pip install --upgrade pip
+            venv/bin/pip install -r requirements.txt
+            venv/bin/pip install pytest==7.4.2
+
+            venv/bin/pytest -v
+        '''
+    }
+}
 
         stage('Build Docker Image') {
             steps {
