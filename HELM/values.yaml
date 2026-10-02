@@ -1,0 +1,13 @@
+replicaCount: 1
+
+image:
+  repository: majithas/banking-app
+  tag: "latest"
+  pullPolicy: Always
+
+containerPort: 5000
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
